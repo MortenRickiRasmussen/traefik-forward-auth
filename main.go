@@ -149,7 +149,7 @@ func main() {
 	flag.String(flag.DefaultConfigFlagname, "", "Path to config file")
 	path := flag.String("url-path", "_oauth", "Callback URL")
 	lifetime := flag.Int("lifetime", 43200, "Session length in seconds")
-	secret := flag.String("secret", "a", "*Secret used for signing (required)")
+	secret := flag.String("secret", "", "*Secret used for signing (required)")
 	authHost := flag.String("auth-host", "", "Central auth login")
 	clientId := flag.String("client-id", "", "*Google Client ID (required)")
 	allowedUnauthenticatedPaths := flag.String("allowed-unauthenticated-paths", "", "Paths which is allowed without being authenticated")
