@@ -181,6 +181,11 @@ func main() {
 		log.Fatal("client-id, client-secret and secret must all be set")
 	}
 
+	// Check for show stopper errors
+	if *allowedUnauthenticatedPaths != "" && *defaultAllowedEmail == ""  {
+		log.Fatal("The default-allowed-email field must be set when using allowed-unauthenticated-paths")
+	}
+
 	// Parse lists
 	var cookieDomains []CookieDomain
 	if *cookieDomainList != "" {
