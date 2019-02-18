@@ -26,6 +26,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		"Headers": r.Header,
 	}).Debugf("Handling request")
 
+	fmt.Println(r.Header.Get("ALLOWEDPATHS"))
+	allowedPathsFromHeader := r.Header.Get("ALLOWEDPATHS")
+	if allowedPathsFromHeader != "" {
+		fw.AllowedUnauthenticatedPaths = append(fw.AllowedUnauthenticatedPaths, strings.Split(allowedPathsFromHeader, ",")...)
+	}
+
+	if fw.CheckAllowedUnauthenticatedPaths(r.URL.Path) {
+		w.Header().Set("X-Forwarded-User", fw.DefaultAllowedEmail)
+		w.WriteHeader(200)
+		return
+	}
+
 	// Parse uri
 	uri, err := url.Parse(r.Header.Get("X-Forwarded-Uri"))
 	if err != nil {
@@ -143,9 +155,11 @@ func main() {
 	flag.String(flag.DefaultConfigFlagname, "", "Path to config file")
 	path := flag.String("url-path", "_oauth", "Callback URL")
 	lifetime := flag.Int("lifetime", 43200, "Session length in seconds")
-	secret := flag.String("secret", "", "*Secret used for signing (required)")
+	secret := flag.String("secret", "a", "*Secret used for signing (required)")
 	authHost := flag.String("auth-host", "", "Central auth login")
 	clientId := flag.String("client-id", "", "*Google Client ID (required)")
+	allowedUnauthenticatedPaths := flag.String("allowed-unauthenticated-paths", "", "Paths which is allowed without being authenticated")
+	defaultAllowedEmail := flag.String("default-allowed-email", "", "The default email to return if the path is allowed unauthenticated")
 	clientSecret := flag.String("client-secret", "", "*Google Client Secret (required)")
 	cookieName := flag.String("cookie-name", "_forward_auth", "Cookie Name")
 	cSRFCookieName := flag.String("csrf-cookie-name", "_forward_auth_csrf", "CSRF Cookie Name")
@@ -190,6 +204,10 @@ func main() {
 	if *emailWhitelist != "" {
 		whitelist = strings.Split(*emailWhitelist, ",")
 	}
+	var allowedUnauthenticatedPathsList []string
+	if *allowedUnauthenticatedPaths != "" {
+		allowedUnauthenticatedPathsList = strings.Split(*allowedUnauthenticatedPaths, ",")
+	}
 
 	// Setup
 	fw = &ForwardAuth{
@@ -224,6 +242,8 @@ func main() {
 
 		Domain:    domain,
 		Whitelist: whitelist,
+		AllowedUnauthenticatedPaths: allowedUnauthenticatedPathsList,
+		DefaultAllowedEmail: *defaultAllowedEmail,
 
 		Prompt: *prompt,
 	}
