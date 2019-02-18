@@ -33,6 +33,8 @@ The following configuration is supported:
 |-csrf-cookie-name|string|CSRF Cookie Name (default "_forward_auth_csrf")|
 |-domain|string|Comma separated list of email domains to allow|
 |-whitelist|string|Comma separated list of email addresses to allow|
+|-allowed-unauthenticated-paths|string|Comma seperated list of paths that doesn't require authentication|
+|-default-allowed-email|string|The email to be returned in the X-Forwarded-Header when an allowed unauthenticated path is hit (Required when using `-default-allowed-email`)|
 |-lifetime|int|Session length in seconds (default 43200)|
 |-url-path|string|Callback URL (default "_oauth")|
 |-prompt|string|Space separated list of [OpenID prompt options](https://developers.google.com/identity/protocols/OpenIDConnect#prompt)|

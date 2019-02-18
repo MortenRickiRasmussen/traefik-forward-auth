@@ -36,8 +36,10 @@ type ForwardAuth struct {
 	CSRFCookieName string
 	CookieSecure   bool
 
-	Domain    []string
-	Whitelist []string
+	Domain    					[]string
+	Whitelist 					[]string
+	AllowedUnauthenticatedPaths []string
+	DefaultAllowedEmail			string
 
 	Prompt string
 }
@@ -103,6 +105,20 @@ func (f *ForwardAuth) ValidateEmail(email string) bool {
 		}
 	} else {
 		return true
+	}
+
+	return found
+}
+
+// check if path is allowed for unauthenticated paths
+func (f *ForwardAuth) CheckAllowedUnauthenticatedPaths(path string) bool {
+	found := false
+	if len(f.AllowedUnauthenticatedPaths) > 0 {
+		for _, allowedPath := range f.AllowedUnauthenticatedPaths {
+			if path == allowedPath {
+				found = true
+			}
+		}
 	}
 
 	return found

@@ -26,6 +26,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		"Headers": r.Header,
 	}).Debugf("Handling request")
 
+	if fw.CheckAllowedUnauthenticatedPaths(r.Header.Get("X-Forwarded-URI")) {
+		w.Header().Set("X-Forwarded-User", fw.DefaultAllowedEmail)
+		w.WriteHeader(200)
+		return
+	}
+
 	// Parse uri
 	uri, err := url.Parse(r.Header.Get("X-Forwarded-Uri"))
 	if err != nil {
@@ -146,6 +152,8 @@ func main() {
 	secret := flag.String("secret", "", "*Secret used for signing (required)")
 	authHost := flag.String("auth-host", "", "Central auth login")
 	clientId := flag.String("client-id", "", "*Google Client ID (required)")
+	allowedUnauthenticatedPaths := flag.String("allowed-unauthenticated-paths", "", "Comma seperated list of paths that doesn't require authentication")
+	defaultAllowedEmail := flag.String("default-allowed-email", "", "The email to be returned in the X-Forwarded-Header when an allowed unauthenticated path is hit")
 	clientSecret := flag.String("client-secret", "", "*Google Client Secret (required)")
 	cookieName := flag.String("cookie-name", "_forward_auth", "Cookie Name")
 	cSRFCookieName := flag.String("csrf-cookie-name", "_forward_auth_csrf", "CSRF Cookie Name")
@@ -173,6 +181,11 @@ func main() {
 		log.Fatal("client-id, client-secret and secret must all be set")
 	}
 
+	// Check for show stopper errors
+	if *allowedUnauthenticatedPaths != "" && *defaultAllowedEmail == ""  {
+		log.Fatal("The default-allowed-email field must be set when using allowed-unauthenticated-paths")
+	}
+
 	// Parse lists
 	var cookieDomains []CookieDomain
 	if *cookieDomainList != "" {
@@ -189,6 +202,10 @@ func main() {
 	var whitelist []string
 	if *emailWhitelist != "" {
 		whitelist = strings.Split(*emailWhitelist, ",")
+	}
+	var allowedUnauthenticatedPathsList []string
+	if *allowedUnauthenticatedPaths != "" {
+		allowedUnauthenticatedPathsList = strings.Split(*allowedUnauthenticatedPaths, ",")
 	}
 
 	// Setup
@@ -224,6 +241,8 @@ func main() {
 
 		Domain:    domain,
 		Whitelist: whitelist,
+		AllowedUnauthenticatedPaths: allowedUnauthenticatedPathsList,
+		DefaultAllowedEmail: *defaultAllowedEmail,
 
 		Prompt: *prompt,
 	}
