@@ -26,6 +26,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		"Headers": r.Header,
 	}).Debugf("Handling request")
 
+	if r.Header.Get("X-Allowed-Paths") != "" {
+		fw.AllowedUnauthenticatedPaths = strings.Split(*allowedUnauthenticatedPaths, ",")
+	}
+
 	if fw.CheckAllowedUnauthenticatedPaths(r.Header.Get("X-Forwarded-URI")) {
 		w.Header().Set("X-Forwarded-User", fw.DefaultAllowedEmail)
 		w.WriteHeader(200)
